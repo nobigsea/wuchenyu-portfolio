@@ -120,6 +120,7 @@
       figure.style.setProperty('--evidence-x', 100 * x / canvas.width + '%');
       figure.style.setProperty('--evidence-y', 100 * y / height + '%');
       figure.style.setProperty('--evidence-width', 100 * width / canvas.width + '%');
+      figure.style.setProperty('--mobile-evidence-width', width + 'px');
       figure.style.setProperty('--evidence-image-ratio', width + ' / ' + itemHeight);
       figure.style.setProperty('--evidence-angle', (layer.angle || 0) + 'deg');
     }

@@ -1,10 +1,10 @@
 /* Editable case layouts and media share the local project document. */
 (()=>{const key=location.pathname.split('/').pop().replace('.html','');let revision=-1,mediaConfig={videos:{}};const main=document.querySelector('.project-layout');if(!main)return;
-function node(e,config,offset,topOffset=0){const n=document.createElement(e.href?'a':'div');n.className='detail-element';if(e.anchor)n.id=e.anchor;n.dataset.kind=e.type;if(e.type==='text')n.dataset.typeSize=String(e.fontSize||16);if(e.type==='text'&&/^_+$/.test(e.text.trim())){n.dataset.decorativeRule='';n.setAttribute('aria-hidden','true')}if(e.type==='image'){n.style.aspectRatio=e.w+'/'+e.h;n.style.setProperty('--archive-frame-ratio',String(e.w/e.h));}if(e.href)n.href=e.href;Object.assign(n.style,{position:'absolute',left:(e.x-offset)+'px',top:(e.y-topOffset)+'px',width:e.w+'px',height:e.h+'px',transform:`rotate(${e.angle||0}deg)`,fontSize:(e.fontSize||20)+'px',fontWeight:e.fontWeight||400,color:e.color||'#294b68',textAlign:e.align||'left',whiteSpace:'pre-wrap',lineHeight:'1.5',textDecoration:'none',fontFamily:'"PingFang SC",sans-serif'});
+function node(e,config,offset,topOffset=0){const n=document.createElement(e.href?'a':'div');n.className='detail-element';if(e.anchor)n.id=e.anchor;n.dataset.kind=e.type;if(e.type==='text')n.dataset.typeSize=String(e.fontSize||16);if(e.type==='text'&&/^\d{2}\s*\/\s*[A-Z]/.test(e.text.trim()))n.dataset.sectionStart='';if(e.type==='text'&&/^_+$/.test(e.text.trim())){n.dataset.decorativeRule='';n.setAttribute('aria-hidden','true')}if(e.type==='image'){n.style.aspectRatio=e.w+'/'+e.h;n.style.setProperty('--archive-frame-ratio',String(e.w/e.h));}if(e.href)n.href=e.href;Object.assign(n.style,{position:'absolute',left:(e.x-offset)+'px',top:(e.y-topOffset)+'px',width:e.w+'px',height:e.h+'px',transform:`rotate(${e.angle||0}deg)`,fontSize:(e.fontSize||20)+'px',fontWeight:e.fontWeight||400,color:e.color||'#294b68',textAlign:e.align||'left',whiteSpace:'pre-wrap',lineHeight:'1.5',textDecoration:'none',fontFamily:'"PingFang SC",sans-serif'});
 if(e.type==='text'){n.textContent=e.text.trim();if(!e.href&&e.headingLevel){n.setAttribute('role','heading');n.setAttribute('aria-level',String(e.headingLevel))}}else if(e.type==='rect'){n.style.background=e.color;n.style.borderRadius=(e.radius||0)+'px'}else{const cfg=mediaConfig.videos?.[e.mediaKey||e.asset.replace(/-cover$/,'')]||{},directVideo=config.assetTypes?.[e.asset]?.startsWith('video/'),video=directVideo||e.mediaKind==='video'||!!cfg.src;const img=document.createElement(video?'video':'img');Object.assign(img.style,{width:'100%',height:'100%',objectFit:e.fit||'contain'});Object.assign(n.style,{overflow:'hidden',borderRadius:(e.radius||0)+'px'});
 if(video){const src=directVideo?config.assets[e.asset]:cfg.src;const poster=config.assets[e.posterAsset]||cfg.poster||(!directVideo?config.assets[e.asset]:'')||(src?src+'.poster.jpg':'');img.setAttribute('aria-label',e.name+(src?'视频':'视频，原片待上传'));img.addEventListener('play',()=>main.querySelectorAll('video').forEach(v=>{if(v!==img)v.pause()}));n.append(img);if(src)window.mountPortfolioVideo(img,src,poster,e.name);if(!src){n.classList.add('video-pending');const label=document.createElement('span');label.className='detail-video-state';label.textContent='视频待上传';n.append(label)}}else{img.src=config.assets[e.asset]||'';img.alt=e.name;img.loading='lazy';img.decoding='async';if(e.crop){const c=e.crop;Object.assign(img.style,{position:'absolute',width:(100/c.w)+'%',height:(100/c.h)+'%',left:(-100*c.x/c.w)+'%',top:(-100*c.y/c.h)+'%',objectFit:'fill'})}n.tabIndex=0;n.setAttribute('role','button');n.setAttribute('aria-label','轻微放大图片：'+e.name);n.setAttribute('aria-pressed','false');n.classList.add('detail-image-preview');const toggle=()=>{const active=n.classList.toggle('is-gently-zoomed');n.setAttribute('aria-pressed',String(active))};n.onclick=toggle;n.onblur=()=>{n.classList.remove('is-gently-zoomed');n.setAttribute('aria-pressed','false')};n.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();toggle()}else if(ev.key==='Escape'){n.classList.remove('is-gently-zoomed');n.setAttribute('aria-pressed','false')}};n.append(img)}}return n}
-function mount(p,config){const left=document.createElement('aside'),right=document.createElement('div');left.className='detail-edit-left';right.className='detail-edit-right';const lb=document.createElement('div'),rb=document.createElement('div');lb.className=rb.className='detail-edit-board';lb.style.width='460px';lb.style.height=(p.summaryHeight||850)+'px';lb.dataset.height=p.summaryHeight||850;rb.style.width='980px';rb.style.height=p.height+'px';const groups=new Map(),layers=new Map();for(const project of p.projects||[]){const group=document.createElement('section');group.className='detail-project';group.setAttribute('aria-label',project.title);Object.assign(group.style,{position:'absolute',left:'0',top:project.y+'px',width:'980px',height:project.height+'px'});group.style.setProperty('--project-paper',project.color);groups.set(project.id,{node:group,y:project.y});rb.append(group)}for(const e of p.elements){if(e.hidden)continue;const summary=e.detailGroup==='summary'||(!e.detailGroup&&e.x<460);const group=groups.get(e.detailProject);if(summary){const layer=node(e,config,0);layer.style.order=String(Math.round(e.y));if(e.type==='text'&&/^_+$/.test(e.text.trim())){layer.dataset.summaryKind='rule';layer.setAttribute('aria-hidden','true')}else if(e.type==='text'&&/^[\d.,%万条+ /]+$/.test(e.text.trim())){layer.dataset.summaryKind='metric'}lb.append(layer)}else{const layer=node(e,config,460,group?.y||0);layer.style.maxWidth=Math.max(0,962-Math.max(0,e.x-460))+'px';(group?.node||rb).append(layer);layers.set(e,layer)}}if(p.projects?.length){rb.replaceChildren(...[...rb.children].sort((a,b)=>parseFloat(a.style.top)-parseFloat(b.style.top)))}left.append(lb);right.append(rb);const binding=document.createElement('span');binding.className='archive-binding';binding.setAttribute('aria-hidden','true');for(let i=0;i<5;i++)binding.append(document.createElement('i'));main.replaceChildren(left,right,binding);main.classList.add('editor-detail-layout');main.style.background=p.background;main.dataset.height=p.height;if(key==='huihuo')mountVideoRails(p,config,rb,layers);mountImageRows(rb);document.title=p.name.replace('最新版 · 案例详情 / ','')+'｜吴晨渝作品集';fit()}
-function mountImageRows(board){
+function mount(p,config){const left=document.createElement('aside'),right=document.createElement('div');left.className='detail-edit-left';right.className='detail-edit-right';const lb=document.createElement('div'),rb=document.createElement('div');lb.className=rb.className='detail-edit-board';lb.style.width='460px';lb.style.height=(p.summaryHeight||850)+'px';lb.dataset.height=p.summaryHeight||850;rb.style.width='980px';rb.style.height=p.height+'px';const groups=new Map(),layers=new Map();for(const project of p.projects||[]){const group=document.createElement('section');group.className='detail-project';group.setAttribute('aria-label',project.title);Object.assign(group.style,{position:'absolute',left:'0',top:project.y+'px',width:'980px',height:project.height+'px'});group.style.setProperty('--project-paper',project.color);groups.set(project.id,{node:group,y:project.y});rb.append(group)}for(const e of p.elements){if(e.hidden)continue;const summary=e.detailGroup==='summary'||(!e.detailGroup&&e.x<460);const group=groups.get(e.detailProject);if(summary){const layer=node(e,config,0);layer.style.order=String(Math.round(e.y));if(e.type==='text'&&/^_+$/.test(e.text.trim())){layer.dataset.summaryKind='rule';layer.setAttribute('aria-hidden','true')}else if(e.type==='text'&&/^[\d.,%万条+ /]+$/.test(e.text.trim())){layer.dataset.summaryKind='metric'}lb.append(layer)}else{const layer=node(e,config,460,group?.y||0);layer.style.maxWidth=Math.max(0,962-Math.max(0,e.x-460))+'px';(group?.node||rb).append(layer);layers.set(e,layer)}}if(p.projects?.length){rb.replaceChildren(...[...rb.children].sort((a,b)=>parseFloat(a.style.top)-parseFloat(b.style.top)))}left.append(lb);right.append(rb);const binding=document.createElement('span');binding.className='archive-binding';binding.setAttribute('aria-hidden','true');for(let i=0;i<5;i++)binding.append(document.createElement('i'));main.replaceChildren(left,right,binding);main.classList.add('editor-detail-layout');main.style.background=p.background;main.dataset.height=p.height;if(key==='huihuo')mountVideoRails(p,config,rb,layers);mountImageRows(rb,key==='commercial');if(key==='commercial')mountCommercialModel(p,rb,layers);orderDetailFlow(rb);document.title=p.name.replace('最新版 · 案例详情 / ','')+'｜吴晨渝作品集';fit()}
+function mountImageRows(board,attachCaptions){
  for(const parent of [board,...board.querySelectorAll('.detail-project')]){
   const images=[...parent.children].filter(n=>n.dataset.kind==='image');
   const rows=[];
@@ -17,11 +17,53 @@ function mountImageRows(board){
    rail.className='detail-image-row archive-media-row';
    const first=[...parent.children].find(n=>row.includes(n));
    first.before(rail);
+   rail.style.top=row[0].style.top;
    for(const image of row.sort((a,b)=>parseFloat(a.style.left)-parseFloat(b.style.left))){
     image.style.setProperty('--archive-image-width',image.style.width);
-    rail.append(image);
+    const caption=attachCaptions&&[...parent.children].find(n=>{
+     const y=parseFloat(n.style.top), x=parseFloat(n.style.left);
+     return n.dataset.kind==='text'&&!n.hasAttribute('data-decorative-rule')&&
+      x>=parseFloat(image.style.left)&&x<parseFloat(image.style.left)+parseFloat(image.style.width)&&
+      Math.abs(y-parseFloat(image.style.top)-parseFloat(image.style.height))<65;
+    });
+    if(caption){
+     const pair=document.createElement('div');
+     pair.className='detail-media-pair';
+     pair.style.setProperty('--archive-image-width',image.style.width);
+     pair.append(image,caption);
+     rail.append(pair);
+    }else rail.append(image);
    }
   }
+ }
+}
+function orderDetailFlow(board){
+ for(const parent of [board,...board.querySelectorAll('.detail-project')]){
+  for(const item of parent.children)item.style.order=String(Math.round(parseFloat(item.style.top)));
+ }
+}
+function mountCommercialModel(page,board,layers){
+ const rects=page.elements.filter(e=>e.type==='rect'&&layers.has(e));
+ const contains=(rect,e)=>e.x>=rect.x&&e.x<rect.x+rect.w&&e.y>=rect.y&&e.y<rect.y+rect.h;
+ const model=rects.find(rect=>rects.filter(e=>e!==rect&&contains(rect,e)).length>=4);
+ if(!model)return;
+
+ const group=document.createElement('div');
+ group.className='detail-content-model';
+ group.style.top=model.y+'px';
+ board.append(group);
+ const copy=page.elements.filter(e=>e.type==='text'&&layers.has(e)&&contains(model,e));
+ const cards=rects.filter(e=>e!==model&&contains(model,e)).map(card=>{
+  const items=copy.filter(e=>contains(card,e)).sort((a,b)=>a.y-b.y);
+  return {items,number:items[0]?.text.trim()};
+ });
+ const cardCopy=new Set(cards.flatMap(card=>card.items));
+ for(const e of copy.filter(e=>!cardCopy.has(e)))group.append(layers.get(e));
+ for(const card of cards.sort((a,b)=>Number(a.number)-Number(b.number))){
+  const item=document.createElement('div');
+  item.className='detail-model-step';
+  for(const e of card.items)item.append(layers.get(e));
+  group.append(item);
  }
 }
 function mountVideoRails(p,config,rb,layers){

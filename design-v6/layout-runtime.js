@@ -180,7 +180,6 @@ function mountMobileCase(card,elements){
   const isCaption=e=>e.x>=300&&pictures.length&&e.y>=pictureBottom-50;
   appendCopy(flow,text.filter(e=>!isCaption(e)));
   appendCasePictures(flow,pictures);
-  appendCopy(flow,text.filter(isCaption));
  }
  appendCopy(flow,links);
  card.append(flow);

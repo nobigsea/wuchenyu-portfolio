@@ -1,0 +1,40 @@
+/* Three type roles and an eight-pixel spacing rhythm. */
+:root{--ui-title:36px;--ui-body:16px;--ui-note:13px;--ui-muted:#737373}
+body{font-size:16px;line-height:1.6;font-weight:400}
+h1,h2,h3,h4,h5,h6,.archive-heading h2,.section-title h2,.contact h2{font-size:36px!important;line-height:1.2!important;font-weight:700!important;letter-spacing:0!important}
+p,.button,button,.filters button,.file-link,.email{font-size:16px;line-height:1.6;font-weight:400}
+button,.button,.file-link{font-weight:600}
+.small,.archive-tip,.work-date,.work-caption,footer,.sidebar nav a>span:last-child{font-size:13px!important;color:var(--ui-muted)!important;font-weight:400!important;line-height:1.6}
+.archive{padding:32px 0!important;min-height:0!important}
+.archive-heading{margin:0 0 16px!important;gap:24px!important;align-items:baseline}
+.archive-heading p{font-size:13px!important;color:var(--ui-muted)!important}
+.filters{margin:16px 0!important;gap:8px!important}
+.filters button{font-size:16px!important;padding:8px 16px!important}
+.work-track{margin:0!important;padding:0!important;gap:24px!important;align-items:flex-start}
+.work-card,.work-card:first-child{flex:0 0 216px!important;padding:0!important;border:0!important}
+.archive-controls{margin:16px 0 0!important;gap:24px!important}
+.archive-controls button{width:48px!important;height:48px!important;font-size:16px!important}
+.archive-tip{margin:8px 0 0!important}
+@media(max-height:760px) and (min-width:761px){.work-card,.work-card:first-child{flex-basis:184px!important}.archive{padding:24px 0!important}}
+@media(max-width:650px){.archive-heading{display:block}.archive-heading h2{margin-bottom:8px}.work-card,.work-card:first-child{flex-basis:200px!important}}
+
+.detail-element[data-kind="text"]{line-height:1.6!important;font-weight:400!important;overflow:visible}
+.detail-element[role="heading"]{line-height:1.2!important;font-weight:700!important}
+
+.archive-controls,.archive-tip{display:none!important}
+.sidebar nav a>span:last-child{color:#fff!important}
+body:has(.editor-detail-layout) .detail-edit-board{background:#faf9f5}
+
+#contact{padding:24px!important}#contact>div{max-height:400px}
+
+#contact{padding:40px!important}.contact-flow{display:flex;flex-direction:column;align-items:flex-start;gap:24px;height:auto!important;max-height:none!important}.contact-flow button{padding:8px 16px;min-height:48px}
+
+main{overflow:visible!important}.case-pin{position:sticky!important}.file-tabs{z-index:50!important;pointer-events:auto!important}.file-tabs button{pointer-events:auto!important}
+
+/* Readability pass: keep titles distinct without heavy body copy. */
+.detail-element[data-kind="text"]{overflow-wrap:anywhere;word-break:normal;line-height:1.6!important}
+.detail-element[role="heading"]{line-height:1.2!important;text-wrap:balance}
+.contact-flow p,.contact-flow a{max-width:70ch;overflow-wrap:anywhere}
+.work-card,.case-rail-card{min-width:0}.case-rail-card p{min-height:52px;line-height:1.6!important;margin:8px 0 0!important}
+.file-tabs button{line-height:1.4!important;white-space:normal}
+@media(max-width:760px){.detail-edit-left{padding-bottom:24px}.detail-edit-board .detail-element[data-kind="text"]{margin-bottom:24px!important}.detail-edit-board .detail-element[role="heading"]{margin-top:16px!important;margin-bottom:16px!important}}

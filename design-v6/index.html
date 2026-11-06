@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>吴晨渝｜个人作品集</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="world.css"><link rel="stylesheet" href="paper.css"><link rel="stylesheet" href="editorial-3d.css"><link rel="stylesheet" href="revision-six.css?v=details12"><link rel="stylesheet" href="profile-collage.css?v=unframed8"><noscript><style>.folder-cover{display:none}.folder-inside{opacity:1;transform:none;pointer-events:auto}.folder-back{transform:scale(1.035)}#closeFolder{display:none}</style></noscript><link rel="stylesheet" href="ui-basics.css?v=5"><link rel="stylesheet" href="archive-style.css?v=7"><style>
+#archive-loading{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:24px;background:#272421 url(assets/charcoal-fibers.webp);color:#27231e}
+#archive-loading[hidden]{display:none}
+#archive-loading .archive-loading-slip{display:grid;justify-items:center;gap:22px}
+#archive-loading .archive-loading-stamp{display:grid;place-items:center;width:100px;height:100px;color:#cf5448;border:3px double currentColor;font:700 28px/1 Georgia,serif;letter-spacing:.08em;transform:rotate(-7deg);animation:archive-stamp 450ms cubic-bezier(.2,.85,.3,1) both}
+#archive-loading .archive-loading-track{display:block;width:112px;height:2px;overflow:hidden;background:#67403a}
+#archive-loading .archive-loading-track::after{display:block;width:37%;height:100%;background:#cf5448;content:"";animation:archive-travel 1.25s ease-in-out infinite alternate}
+@keyframes archive-stamp{from{opacity:0;transform:translateY(-14px) rotate(-12deg) scale(1.18)}to{opacity:1;transform:rotate(-7deg)}}
+@keyframes archive-travel{from{transform:translateX(-10%)}to{transform:translateX(175%)}}
+@media(prefers-reduced-motion:reduce){#archive-loading .archive-loading-stamp,#archive-loading .archive-loading-track::after{animation:none}}
+
+</style><noscript><style>#archive-loading{display:none}</style></noscript></head>
+<body class="archive-home">
+<div id="archive-loading" role="status" aria-label="正在装载档案"><div class="archive-loading-slip"><span class="archive-loading-stamp" aria-hidden="true">WCY</span><span class="archive-loading-track" aria-hidden="true"></span></div></div>
+<script>
+(() => {
+  const overlay = document.querySelector('#archive-loading');
+  if (location.hash && location.hash !== '#intro') { overlay.hidden = true; return; }
+  const finish = () => { clearTimeout(deadline); overlay.hidden = true; };
+  const frame = new Promise(resolve => document.addEventListener('portfolio:folder-ready', resolve, {once:true}));
+  const loaded = new Promise(resolve => window.addEventListener('load', resolve, {once:true}));
+  const deadline = setTimeout(() => {
+    if (!document.querySelector('#folder3d')?.dataset.rendered) window.enableProfileFallback?.();
+    finish();
+  }, 20000);
+  Promise.all([frame, loaded]).then(() => document.fonts?.ready).then(finish, finish);
+})();
+</script>
+<a class="skip" href="#main">跳到内容</a>
+<aside class="sidebar" aria-label="网站分区导航">
+ <a href="#intro" class="brand archive-avatar" aria-label="吴晨渝 · 返回自我介绍"><img src="assets/archive-avatar.png" width="48" height="48" alt=""></a>
+ <nav>
+ <a href="#intro" data-section="intro" aria-label="自我介绍"><span class="icon" aria-hidden="true"><svg viewBox="0 0 42 42" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 9h18v25H13z M18 9V7a5 5 0 0 1 10 0v2 M12 12 8 29l5 2"/></svg></span><span>自我介绍</span></a>
+ <a href="#cases" data-section="cases" aria-label="精选案例"><span class="icon" aria-hidden="true"><svg viewBox="0 0 42 42" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M37 21a16 16 0 1 1-32 0 16 16 0 0 1 32 0 M27 21a6 6 0 1 1-12 0 6 6 0 0 1 12 0"/></svg></span><span>精选案例</span></a>
+ <a href="#archive" data-section="archive" aria-label="作品库"><span class="icon" aria-hidden="true"><svg viewBox="0 0 42 42" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M36 21a15 15 0 1 1-30 0 15 15 0 0 1 30 0 M15 16h.1m12 0h.1 M16 24q5 5 10 0"/></svg></span><span>作品库</span></a>
+ <a href="#contact" data-section="contact" aria-label="联系我"><span class="icon" aria-hidden="true"><svg viewBox="0 0 42 42" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10h27v23H8z M10 14l11 8 12-8"/></svg></span><span>联系我</span></a>
+ </nav>
+
+</aside>
+<div class="page-progress" aria-hidden="true"><div class="progress-dot"></div></div><main id="main">
+ <header class="topline"><a href="#contact">联系我</a></header>
+ <section id="intro" class="intro section">
+ <h1 class="visually-hidden">吴晨渝的2026作品集</h1>
+ <div class="hero-stage folder-stage" aria-label="吴晨渝的作品档案袋">
+ <p class="hero-caption caption-left">吴晨渝的</p><p class="hero-caption caption-right">2026作品集</p>
+ <div id="folder3d" class="folder-viewer" aria-label="三维档案袋，拖动可旋转360度"></div>
+ <div class="folder-3d-toolbar"><p id="folderHint">拖动旋转 360° · 点击档案袋抽出内页</p><div><button id="pullFolder" type="button" aria-expanded="false">抽出自我介绍 ↗</button><button id="resetFolder" type="button">回到正面 ↶</button></div></div>
+ <template id="profileFallback">
+ <div class="profile-sheet collage-file"><section class="personal-file"><p class="file-kicker">PERSONAL FILE / 2026</p><h2>吴晨渝<span>内容创作者档案</span></h2><p class="file-motto">把观察，做成内容。</p><dl class="personal-fields"><div><dt>姓名<small>NAME</small></dt><dd>吴晨渝</dd></div><div><dt>工作方向<small>FOCUS</small></dt><dd>新媒体运营 / 内容策划<br>影视综宣传</dd></div><div><dt>技能方向<small>SKILLS</small></dt><dd class="skill-checks"><span>✓ 选题与脚本</span><span>✓ 图文设计</span><span>✓ 拍摄与剪辑</span><span>✓ 发布与复盘</span></dd></div><div><dt>个人简介<small>ABOUT</small></dt><dd>我喜欢从用户反馈和现场观察中发现切口，把一个想法做成图文或视频。<br>做过从 0 启动的资讯账号，也参与娱乐内容、品牌商业和活动文案制作。</dd></div></dl><a class="file-work-link" href="#cases">去看看我的作品 ↗</a><p class="file-footer">OBSERVE. MAKE. SHARE. <span>☺</span></p></section><section class="experience-collage" aria-label="工作经历拼贴"><div class="experience-stack"><article class="experience-paper paper-0" data-experience="0"  aria-hidden="false"><div class="paper-clip" aria-hidden="true"></div><header><span>WORK FILE 01</span><span>工作经历</span></header><h3>艾迪因赛</h3><p class="experience-role">新媒体运营</p><div class="experience-images"><img src="../dist/assets/account-cover.webp" alt="艾迪因赛相关作品截图"><img src="../dist/assets/coser-cover.webp" alt="艾迪因赛内容作品细节"></div><h4>从 0 启动，也从现场发现内容。</h4><p>独立完成「联动少女酱」的账号定位、选题、图文制作与发布复盘。</p><p>在品牌营销项目现场寻找素材，完成拍摄、文案、剪辑与发布。</p><a href="account.html">查看相关案例 ↗</a><span class="paper-number">01</span></article><article class="experience-paper paper-1" data-experience="1" inert aria-hidden="true"><div class="paper-clip" aria-hidden="true"></div><header><span>WORK FILE 02</span><span>工作经历</span></header><h3>飞博共创</h3><p class="experience-role">文案策划实习</p><div class="experience-images"><img src="../dist/assets/event-cover.webp" alt="飞博共创相关作品截图"><img src="../dist/assets/brand-cover.webp" alt="飞博共创内容作品细节"></div><h4>把活动信息，写成用户愿意看的内容。</h4><p>参与 RCC 看车节：独立起草官薯与 KOC 笔记，配合不同传播阶段输出内容。</p><p>参与 VLOG 文案与剪辑、结案资料梳理；创意提报与执行成果分开呈现。</p><a href="rcc.html">查看相关案例 ↗</a><span class="paper-number">02</span></article><article class="experience-paper paper-2" data-experience="2" inert aria-hidden="true"><div class="paper-clip" aria-hidden="true"></div><header><span>WORK FILE 03</span><span>工作经历</span></header><h3>会火</h3><p class="experience-role">短视频内容运营实习</p><div class="experience-images"><img src="../dist/assets/das-cover.webp" alt="会火相关作品截图"><img src="../dist/assets/cat-cover.webp" alt="会火内容作品细节"></div><h4>从热评里，找到另一个叙事切口。</h4><p>独立完成日常内容的选题、文案、素材寻找、剪辑和发布。</p><p>商业内容依据给定方向，从整期综艺中寻找片段并完成剪辑。</p><a href="huihuo.html">查看相关案例 ↗</a><span class="paper-number">03</span></article></div><div class="experience-controls"><button type="button" class="experience-prev" aria-label="上一段工作经历">←</button><span class="experience-count" aria-live="polite">01 / 03</span><button type="button" class="experience-next" aria-label="下一段工作经历">→</button></div></section></div>
+ </template>
+ <button class="folder-fallback" id="openProfileFallback" type="button" hidden>查看自我介绍 ↗</button>
+ </div>
+ <a class="scroll-invitation" href="#cases">向下翻阅作品 ↓</a>
+ </section>
+ <section id="cases" class="section cases"><div class="section-title"><div><h2>精选案例档案</h2></div><p>四段实践，各有侧重。<br>继续向下滚动，翻阅每一份案例档案。</p></div>
+ <div class="case-pin"><div class="file-tabs" role="tablist" aria-label="选择案例档案"></div>
+ <div class="deck-wrap" aria-label="案例档案滑动区"><div class="back-layer back4"></div><div class="back-layer back3"></div><div class="back-layer back2"></div><div id="caseDeck"></div></div>
+ <div class="deck-controls"><button id="casePrev" aria-label="上一个案例">←</button><span id="caseCount" aria-live="polite">01 / 04</span><span class="control-line"></span><button id="caseNext" aria-label="下一个案例">→</button></div>
+ </div></section>
+ <section id="archive" class="section archive"><div class="archive-heading"><h2>还有这些作品。</h2><p>视频作品 · 选辑</p></div>
+ 
+ <div class="work-track" id="workTrack" tabindex="0" aria-label="横向作品库，可左右滑动"></div>
+ <div class="archive-controls"><button id="workPrev" aria-label="向左查看作品">←</button><span id="workPage" aria-live="polite">1</span><span class="control-line"></span><span id="workTotal">3</span><button id="workNext" aria-label="向右查看作品">→</button></div>
+ <p class="small archive-tip">左右滑动浏览 · 点击播放视频</p>
+ </section>
+ <section id="contact" class="section contact"><h2>保持好奇，继续创作。</h2><a class="email" href="mailto:wuchenyu0726@sina.com">wuchenyu0726@sina.com ↗</a><p>新媒体运营 / 内容策划 / 影视综宣传</p><div class="contact-actions"></div></section>
+ <footer><span>吴晨渝 / 个人作品集</span><span>© 2026</span><a href="#intro">回到顶部 ↑</a></footer>
+</main>
+<div class="welcome" id="welcome" role="status" aria-live="polite"><span class="welcome-pin"></span><span class="hello">Hello!</span><span class="found">you find me</span><span class="welcome-sign">吴晨渝的内容档案 </span></div>
+<dialog id="workModal" aria-labelledby="modalTitle"><button class="close" id="closeWork" aria-label="关闭作品">×</button><div class="modal-inner"></div></dialog>
+<dialog id="caseModal" aria-labelledby="caseModalTitle"><button class="close" id="closeCase" aria-label="关闭案例">×</button><div class="case-modal-inner"></div></dialog>
+
+<dialog id="profileDialog" class="profile-dialog" aria-labelledby="profileTitle"><div class="profile-dialog-head"><h2 id="profileTitle">认识一下，吴晨渝。</h2><div><button type="button" id="inspectPaper">查看3D内页 ↗</button><button type="button" id="returnPaper">收起档案 ↙</button></div></div><div id="profileContent"></div></dialog>
+<dialog id="wechatModal" aria-labelledby="wechatTitle"><button class="close" id="closeWechat" aria-label="关闭微信二维码">×</button><div class="wechat-inner"><h2 id="wechatTitle">微信联系</h2><div id="wechatContent"></div></div></dialog>
+<script src="vendor/gsap.min.js"></script><script src="media-config.js"></script><script src="content.js?v=video-five18"></script><script src="app.js?v=case-fixed2"></script><script src="world.js?v=archive-loading1"></script><script src="gsap-motion.js"></script><script src="profile-collage.js?v=unframed8"></script><script src="layout-runtime.js?v=archive1"></script><script src="work-library.js?v=posters3"></script><script type="module">import('./folder-3d.js?v=archive-loading1').catch(window.enableProfileFallback);</script><script src="case-navigation.js?v=live-preview1"></script></body></html>

@@ -1,0 +1,5 @@
+GSAP 3.13.0 / GreenSock
+Distributed file: https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js
+Copyright and license notice preserved at the start of gsap.min.js.
+License terms: https://gsap.com/standard-license
+Documentation: https://gsap.com/docs/v3/

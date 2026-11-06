@@ -759,3 +759,27 @@ body.archive-home, body.archive-detail { background: var(--archive-charcoal), va
     min-height: 0 !important;
   }
 }
+
+
+@media (max-width: 760px) {
+  .archive-detail [data-decorative-rule] {
+    display: none;
+  }
+
+  .archive-detail .detail-edit-right :is(.detail-edit-board, .detail-project) {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .archive-detail .detail-edit-right :is(.detail-edit-board, .detail-project) >
+    :is(.detail-element, .detail-project, .archive-media-row, .case-video-rail) {
+    margin-block: 0 !important;
+  }
+
+  .archive-detail .case-rail-card p {
+    font-size: 13px !important;
+    line-height: 1.45;
+    margin: 8px 0 0;
+  }
+}

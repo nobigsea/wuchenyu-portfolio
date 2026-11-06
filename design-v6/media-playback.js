@@ -45,7 +45,10 @@ window.mountPortfolioVideo = (video, src, poster, title) => {
   button.addEventListener('click', () => {
     button.disabled = true;
     status.textContent = '正在加载视频…';
-    if (!video.getAttribute('src') || video.error) video.src = src;
+    const playbackSource = matchMedia('(max-width: 760px)').matches
+      ? src.replace(/\.web-preview\.mp4$/, '.mobile-preview.mp4')
+      : src;
+    if (!video.getAttribute('src') || video.error) video.src = playbackSource;
     startupDeadline = setTimeout(() => {
       video.pause();
       video.removeAttribute('src');

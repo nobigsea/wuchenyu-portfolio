@@ -10,4 +10,31 @@ window.initProfileCollage=function(root){
 };document.querySelectorAll('.collage-file').forEach(window.initProfileCollage);
 })();
 
-(()=>{const dialog=document.querySelector('#profileDialog'),content=document.querySelector('#profileContent');window.fitProfileFile=()=>{if(!dialog.open)return;content.style.zoom='1';const width=+(content.firstElementChild?.dataset.width||1120);content.style.width=width+'px';const height=content.scrollHeight;const scale=Math.min(1,(innerWidth-80)/width,(innerHeight-150)/height);content.style.zoom=String(Math.max(.1,scale));dialog.style.width=`${width*scale}px`;dialog.scrollTop=0;};new MutationObserver(window.fitProfileFile).observe(dialog,{attributes:true,attributeFilter:['open']});addEventListener('resize',window.fitProfileFile);})();
+(()=>{
+ const dialog=document.querySelector('#profileDialog');
+ const content=document.querySelector('#profileContent');
+ const mobile=matchMedia('(max-width: 760px)');
+ window.fitProfileFile=()=>{
+  if(!dialog.open)return;
+  if(mobile.matches){
+   content.style.removeProperty('zoom');
+   content.style.removeProperty('width');
+   dialog.style.removeProperty('width');
+   content.tabIndex=0;
+   return;
+  }
+  content.removeAttribute('tabindex');
+  content.style.zoom='1';
+  const width=+(content.firstElementChild?.dataset.width||1120);
+  content.style.width=width+'px';
+  const scale=Math.max(.1,Math.min(1,(innerWidth-80)/width,(innerHeight-150)/content.scrollHeight));
+  content.style.zoom=String(scale);
+  dialog.style.width=`${width*scale}px`;
+  dialog.scrollTop=0;
+ };
+ new MutationObserver(()=>{
+  if(dialog.open)content.scrollTop=0;
+  window.fitProfileFile();
+ }).observe(dialog,{attributes:true,attributeFilter:['open']});
+ addEventListener('resize',window.fitProfileFile);
+})();

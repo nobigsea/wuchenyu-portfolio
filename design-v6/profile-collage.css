@@ -26,7 +26,7 @@
  .profile-dialog .experience-controls{margin-top:22px}
 }
 @media(max-width:760px){.profile-dialog{width:92vw;max-width:92vw;max-height:88svh}}
-/* The complete spread fits the window; it is never an inner scrolling page. */
+/* The desktop spread fits inside the window. */
 .profile-dialog{box-sizing:border-box;max-width:calc(100vw - 32px);max-height:calc(100svh - 32px);overflow:hidden;padding:14px 24px 22px}
 .profile-dialog #profileContent{width:1120px}
 .profile-dialog .collage-file{display:grid;grid-template-columns:1fr 1fr;padding:26px;gap:24px}
@@ -52,3 +52,99 @@ body:has(#profileDialog[open]){overflow:hidden}
 .profile-dialog .profile-dialog-head{position:absolute;top:-44px;right:0;margin:0;z-index:10}
 .profile-dialog #profileContent{padding:0;background:transparent}
 .profile-dialog #returnPaper{background:#f6f4ed;border:0;color:#343c42}
+
+@media (max-width: 760px) {
+ .profile-dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(calc(100% - 24px), 540px);
+  height: calc(100dvh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  background: var(--archive-grain), var(--archive-sheet);
+  box-shadow: var(--archive-shadow);
+ }
+ .profile-dialog .profile-dialog-head {
+  position: static;
+  margin: 0;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--archive-line);
+ }
+ .profile-dialog #returnPaper {
+  min-height: 44px;
+  background: transparent;
+  color: var(--archive-red);
+ }
+ .profile-dialog #profileContent {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y proximity;
+  scrollbar-width: thin;
+  touch-action: pan-y pinch-zoom;
+ }
+ .profile-dialog #profileContent:focus-visible { outline-offset: -3px; }
+ .profile-dialog .reader-leaf {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100%;
+  padding: 22px clamp(16px, 6vw, 36px);
+  scroll-snap-align: start;
+  border-bottom: 1px solid var(--archive-line);
+ }
+ .profile-dialog .reader-leaf:not(:last-child) { min-height: calc(100% - 16px); }
+ .profile-dialog .reader-experience {
+  background: var(--reader-stock, var(--archive-grain)) center / 100% 100%, var(--archive-sheet);
+ }
+ .profile-dialog .reader-leaf > *,
+ .profile-dialog .reader-field [data-reader-kind="text"] {
+  position: relative !important;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  overflow-wrap: anywhere;
+ }
+ .profile-dialog .reader-leaf [data-reader-kind="text"] {
+  text-align: start !important;
+  line-height: 1.4 !important;
+ }
+ .profile-dialog .reader-leaf > [data-reader-kind="text"]:first-child {
+  font-family: var(--archive-serif);
+ }
+ .profile-dialog .reader-field {
+  display: grid;
+  grid-template-columns: 4.4rem minmax(0, 1fr);
+  gap: 10px;
+  padding-block: 10px 3px;
+  border-top: 1px solid var(--archive-line);
+ }
+ .profile-dialog .reader-leaf > [data-reader-kind="image"] {
+  width: min(100%, var(--reader-image-width), calc(180px * var(--reader-image-ratio))) !important;
+  align-self: center;
+ }
+ .profile-dialog .reader-leaf > [data-reader-kind="image"] img { display: block; }
+ .profile-dialog .reader-leaf > .linked-reader-controls {
+  justify-content: center;
+  margin-top: auto;
+ }
+ .profile-dialog .collage-file {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  padding: 18px;
+  box-shadow: none;
+ }
+ .profile-dialog .collage-file > section { scroll-snap-align: start; }
+ .profile-dialog .experience-stack { display: grid; min-height: 0; }
+ .profile-dialog .experience-paper {
+  position: relative;
+  grid-area: 1 / 1;
+  height: auto;
+  padding: 18px 16px 36px;
+ }
+ .profile-dialog .experience-images { height: 112px; }
+ .profile-dialog .experience-controls button { min-height: 44px; }
+}

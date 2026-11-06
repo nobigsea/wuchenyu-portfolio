@@ -10,6 +10,8 @@ function mountCases(){for(const p of pages().filter(p=>p.role.startsWith('case-'
 addEventListener('resize',fitCases);const deck=document.querySelector('#caseDeck');if(deck)new ResizeObserver(fitCases).observe(deck);
 
 function mountContact(){const p=pages().find(p=>p.role==='contact'),root=document.querySelector('#contact');if(!p||!root)return;root.replaceChildren();root.style.background=p.background;const board=document.createElement('div');board.className='contact-flow';for(const e of p.elements){if(e.hidden||e.type!=='text')continue;const n=document.createElement(e.contactAction==='email'?'a':e.contactAction==='wechat'?'button':'p');n.textContent=e.text;n.style.cssText=`font-size:${e.fontSize}px;font-weight:${e.fontWeight||400};line-height:${e.fontSize===36?1.2:1.6};margin:0;color:${e.color}`;if(e.contactAction==='email')n.href='mailto:wuchenyu0726@sina.com';if(e.contactAction==='wechat')n.onclick=()=>document.querySelector('#wechatModal')?.showModal();board.append(n)}root.append(board)}
-async function poll(){try{const res=await fetch('layout-config.json',{cache:'no-store'});if(!res.ok)return;const next=await res.json();if(next.revision===revision)return;revision=next.revision;config=next;mountReader();mountCases();mountContact();for(const fn of listeners)fn(pages(),draw)}catch{}}
-window.WCYLayout={subscribe(fn){listeners.add(fn);if(config.pages.length)fn(pages(),draw)},draw};poll();setInterval(poll,1500);
+let polling=false;
+async function poll(){if(polling||document.hidden)return;polling=true;try{const res=await fetch('layout-config.json',{cache:'no-store'});if(!res.ok)return;const next=await res.json();if(next.revision===revision)return;revision=next.revision;config=next;mountReader();mountCases();mountContact();for(const fn of listeners)fn(pages(),draw,config)}catch{}finally{polling=false}}
+window.WCYLayout={subscribe(fn){listeners.add(fn);if(config.pages.length)fn(pages(),draw,config)},draw};
+addEventListener('focus',poll);document.addEventListener('visibilitychange',poll);poll();setInterval(poll,1500);
 })();

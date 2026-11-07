@@ -641,7 +641,6 @@ body.archive-home, body.archive-detail { background: var(--archive-charcoal), va
 
 /* Keep desktop image groups intact on small screens. */
 .mobile-case-content { display: none; }
-.detail-image-row, .detail-media-pair, .detail-content-model, .detail-model-step { display: contents; }
 
 @media (max-width: 760px) {
   .archive-media-row {
@@ -654,17 +653,6 @@ body.archive-home, body.archive-detail { background: var(--archive-charcoal), va
     padding-block: 4px 12px;
   }
   .archive-media-row:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
-  .editor-detail-layout .detail-image-row { margin-block: 24px 36px; }
-  .editor-detail-layout .detail-image-row > .detail-element[data-kind="image"] {
-    flex: none;
-    width: min(var(--archive-image-width), 82%) !important;
-    max-width: none !important;
-    max-height: none;
-    margin: 0;
-  }
-  .editor-detail-layout .detail-image-row > .detail-element[data-kind="image"]:not(:has(video)) {
-    width: min(calc(var(--archive-image-width) * .72), 82%, calc(230px * var(--archive-frame-ratio))) !important;
-  }
 }
 
 @media (max-width: 650px) {
@@ -762,59 +750,188 @@ body.archive-home, body.archive-detail { background: var(--archive-charcoal), va
 
 
 @media (max-width: 760px) {
-  .archive-detail .detail-edit-right [data-decorative-rule] {
-    display: none;
-  }
-
-  .archive-detail .detail-edit-right :is(.detail-edit-board, .detail-project) {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .archive-detail .detail-edit-right :is(.detail-edit-board, .detail-project) >
-    :is(.detail-element, .detail-project, .archive-media-row, .case-video-rail, .detail-content-model) {
-    margin-block: 0 !important;
-  }
-
-  .archive-detail .detail-edit-right [data-section-start] {
-    border-block-start: 1px solid #99958c;
-    padding-block-start: 14px;
-  }
-
   .archive-detail .brand-content .brand-section {
     border-block-start: 1px solid #99958c;
   }
+}
 
-  .archive-detail .detail-media-pair {
-    display: grid;
-    flex: 0 0 min(var(--archive-image-width), 82%);
-    gap: 8px;
-    min-width: 0;
+/* The editor supplies the case content. The archive uses the same reading
+   hierarchy as the brand strategy spread at every viewport. */
+.archive-detail .detail-edit-right {
+  padding: clamp(15px, 2vw, 30px);
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right :is(.detail-edit-board, .detail-project) {
+  display: flex;
+  flex-direction: column;
+  width: 100% !important;
+  height: auto !important;
+  zoom: 1 !important;
+  gap: 14px;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right :is(.detail-element, .detail-project, .case-video-rail) {
+  position: relative !important;
+  inset: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right .detail-element[data-kind="text"] {
+  width: auto !important;
+  padding-inline: 0;
+  color: var(--archive-ink) !important;
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+  text-align: start !important;
+  overflow-wrap: anywhere;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right .detail-element[role="heading"] {
+  font-family: var(--archive-serif) !important;
+  font-size: clamp(23px, 2.6vw, 36px) !important;
+  font-weight: 700 !important;
+  line-height: 1.24 !important;
+  text-wrap: balance;
+}
+
+.archive-detail .detail-edit-right .detail-element[data-section-start] {
+  margin-block-start: 12px !important;
+  border-block-start: 1px solid #99958c;
+  padding-block-start: clamp(18px, 2.8vw, 36px);
+}
+
+.archive-detail .detail-edit-right [data-section-start] > span {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #dfdfc9;
+  color: #342e25;
+  border-bottom: 1px solid #a2a18a;
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+
+.archive-detail .detail-edit-right :is([data-decorative-rule], [data-kind="rect"]),
+.archive-detail .detail-edit-left [data-kind="rect"] {
+  display: none;
+}
+
+.archive-detail .detail-edit-left [data-summary-kind="rule"] {
+  display: block;
+  padding: 0;
+  line-height: 0 !important;
+  border-block-end: 1px solid #bdab90;
+}
+
+.archive-detail :is(.detail-summary-data, .detail-result-bar, .detail-content-model) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  padding: 12px;
+  background: #e6dec5;
+  border: 1px solid #bda98b;
+  border-radius: 3px;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right .detail-callout {
+  padding: 10px 12px;
+  background: #e6dec5;
+  border: 1px solid #bda98b;
+  border-radius: 3px;
+}
+
+.archive-detail .detail-summary-data:has(> :only-child) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.archive-detail .detail-edit-left .detail-summary-data .detail-element {
+  margin: 0 !important;
+  border: 0;
+  padding: 0;
+}
+
+.archive-detail .detail-summary-data .detail-element:not([data-summary-kind]) {
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.archive-detail .detail-content-model > :first-child {
+  grid-column: 1 / -1;
+}
+
+.archive-detail .detail-model-step {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 10px;
+  background: #f4eddd;
+}
+
+.archive-detail .detail-model-step > :nth-child(2) {
+  font-weight: 700 !important;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right .detail-image-row {
+  display: flex;
+  justify-content: safe center;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 0;
+  padding: 4px 0 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right .detail-element[data-kind="image"] {
+  width: min(var(--archive-image-width), 100%, calc(460px * var(--archive-frame-ratio))) !important;
+  padding: 0;
+  margin-inline: auto !important;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right .detail-image-row > .detail-element {
+  flex: 0 0 min(var(--archive-image-width), 82%);
+  margin: 0 !important;
+}
+
+.archive-detail .detail-edit-right .detail-media-pair {
+  display: grid;
+  flex: 0 0 min(var(--archive-image-width), 82%);
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right :is(.detail-media-pair, .case-rail-card) > [data-kind="image"] {
+  width: 100% !important;
+  min-height: 0 !important;
+}
+
+.archive-detail .editor-detail-layout .detail-edit-right .detail-element.detail-media-caption,
+.archive-detail .detail-edit-right .case-rail-card p,
+.archive-detail .brand-page .brand-content .frog-evidence figcaption {
+  font-size: 13px !important;
+  font-weight: 400;
+  line-height: 1.45 !important;
+  text-align: center !important;
+}
+
+.archive-detail .detail-edit-right .case-video-rail {
+  width: 100% !important;
+}
+
+.archive-detail .detail-edit-right .case-rail-card p {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 760px) {
+  .archive-detail .editor-detail-layout .detail-edit-right .detail-element[data-kind="image"]:not(:has(video)) {
+    width: min(var(--archive-image-width), 100%, calc(280px * var(--archive-frame-ratio))) !important;
   }
 
-  .archive-detail .detail-media-pair > .detail-element {
-    width: 100% !important;
-    margin: 0 !important;
-  }
-
-  .archive-detail :is(.detail-content-model, .detail-model-step) {
-    display: grid;
-    gap: 8px;
-  }
-
-  .archive-detail .detail-model-step {
-    padding: 12px;
-    background: #e6dec5;
-  }
-
-  .archive-detail :is(.detail-content-model, .detail-model-step) > .detail-element {
-    margin: 0 !important;
-  }
-
-  .archive-detail .case-rail-card p {
-    font-size: 13px !important;
-    line-height: 1.45;
-    margin: 8px 0 0;
+  .archive-detail .editor-detail-layout .detail-edit-right .detail-image-row > .detail-element {
+    flex-basis: min(calc(var(--archive-image-width) * .72), 82%, calc(260px * var(--archive-frame-ratio)));
   }
 }

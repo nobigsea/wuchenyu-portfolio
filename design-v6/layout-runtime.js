@@ -188,12 +188,24 @@ function mountCases(){for(const p of pages().filter(p=>p.role.startsWith('case-'
 addEventListener('resize',fitCases);const deck=document.querySelector('#caseDeck');if(deck)new ResizeObserver(fitCases).observe(deck);
 
 function mountContact(){const p=pages().find(p=>p.role==='contact'),root=document.querySelector('#contact');if(!p||!root)return;root.replaceChildren();root.style.background=p.background;const board=document.createElement('div');board.className='contact-flow';for(const e of p.elements){if(e.hidden||e.type!=='text')continue;const n=document.createElement(e.contactAction==='email'?'a':e.contactAction==='wechat'?'button':'p');n.textContent=e.text;
- if(n.tagName==='P'&&e.text.startsWith('谢谢你，\n')){
-  const comma=document.createElement('span');
-  comma.className='contact-title-comma';
-  comma.textContent='，';
-  n.classList.add('contact-title');
-  n.replaceChildren('谢谢你',comma,e.text.slice('谢谢你，'.length));
+ if(n.tagName==='P'&&e.text.trimEnd().includes('\n')){
+  const lines=e.text.split('\n');
+  n.replaceChildren();
+  for(const [index,line] of lines.entries()){
+   if(index)n.append('\n');
+   if(!line)continue;
+   const span=document.createElement('span');
+   span.className='contact-line';
+   span.textContent=line;
+   if(index===0&&line==='谢谢你，'){
+    const comma=document.createElement('span');
+    comma.className='contact-title-comma';
+    comma.textContent='，';
+    span.replaceChildren('谢谢你',comma);
+    n.classList.add('contact-title');
+   }
+   n.append(span);
+  }
  }
  n.style.cssText=`font-size:${e.fontSize}px;font-weight:${e.fontWeight||400};line-height:${e.fontSize===36?1.2:1.6};margin:0;color:${e.color}`;if(e.contactAction==='email')n.href='mailto:wuchenyu0726@sina.com';if(e.contactAction==='wechat')n.onclick=()=>document.querySelector('#wechatModal')?.showModal();board.append(n)}root.append(board)}
 let polling=false;

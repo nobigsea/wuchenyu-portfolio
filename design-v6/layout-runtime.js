@@ -61,6 +61,32 @@ function readerControls(index,length,onTurn){
  }
  return controls;
 }
+// Scale the desktop image layers together while the text stays in the mobile flow.
+function readerImageGroup(layers){
+ const group=document.createElement('div');
+ group.className='reader-image-group';
+ const bounds=layers.map(e=>{
+  const angle=(e.angle||0)*Math.PI/180;
+  const width=e.w*Math.abs(Math.cos(angle))+e.h*Math.abs(Math.sin(angle));
+  const height=e.w*Math.abs(Math.sin(angle))+e.h*Math.abs(Math.cos(angle));
+  return {left:e.x+(e.w-width)/2,top:e.y+(e.h-height)/2,width,height};
+ });
+ const left=Math.min(...bounds.map(b=>b.left));
+ const top=Math.min(...bounds.map(b=>b.top));
+ const width=Math.max(...bounds.map(b=>b.left+b.width))-left;
+ const height=Math.max(...bounds.map(b=>b.top+b.height))-top;
+ group.style.aspectRatio=width+'/'+height;
+ for(const e of layers){
+  const node=readerNode(e);
+  node.querySelector('img').loading='lazy';
+  Object.assign(node.style,{
+   left:(e.x-left)/width*100+'%',top:(e.y-top)/height*100+'%',
+   width:e.w/width*100+'%',height:e.h/height*100+'%'
+  });
+  group.append(node);
+ }
+ return group;
+}
 function mountMobileReader(root,list){
  const personal=document.createElement('section');
  personal.className='reader-leaf reader-personal';
@@ -106,7 +132,14 @@ function mountMobileReader(root,list){
   if(artwork&&config.assets[artwork.asset]){
    section.style.setProperty('--reader-stock',`url("${config.assets[artwork.asset]}")`);
   }
-  section.append(...items(page).filter(e=>e.x>=740&&readable(e)).map(mobileItem));
+  const experienceItems=items(page).filter(e=>e.x>=740&&readable(e));
+  const imageLayers=page.elements.filter(e=>e.x>=740&&!e.hidden&&e.type==='image'&&readable(e));
+  const useGroup=['reader-1','reader-2'].includes(page.role)&&imageLayers.length>1;
+  const firstImage=experienceItems.find(e=>e.type==='image');
+  for(const e of experienceItems){
+   if(!useGroup||e.type!=='image')section.append(mobileItem(e));
+   else if(e===firstImage)section.append(readerImageGroup(imageLayers));
+  }
   section.append(readerControls(index,list.length,dir=>{
    const destination=experiences[index+dir];
    destination.querySelector('button:not(:disabled)')?.focus({preventScroll:true});

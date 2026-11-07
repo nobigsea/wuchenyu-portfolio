@@ -263,7 +263,7 @@ body.archive-home, body.archive-detail {
   .archive-detail .detail-edit-left .detail-element[data-kind="image"] { margin: 6px 0 8px; }
   .archive-detail .brand-summary, .archive-detail .brand-content { padding: 15px; }
   .archive-home #contact { padding: 22px !important; }
-  .archive-home .contact-flow p { white-space: pre-line; }
+  .archive-home .contact-line { display: block; }
   .archive-home .contact-flow p:not(.contact-title) { font-size: clamp(13px, 4vw, 16px) !important; }
   .archive-home .contact-title-comma { display: none; }
   .archive-home .file-tabs button { padding-inline: 7px !important; }

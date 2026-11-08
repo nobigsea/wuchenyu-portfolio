@@ -1791,3 +1791,72 @@ html:has(.archive-detail .blue-reader[data-sheet-switching]) {
     font-size: 13px;
   }
 }
+
+
+@media (max-width: 760px) {
+  .archive-home #intro .hero-caption { display: none; }
+  .archive-home #intro .folder-stage:not(:has(.is-open)) {
+    height: min(126vw, 540px, max(220px, calc(100svh - 150px)));
+  }
+  .archive-home #intro .folder-viewer { inset-inline: -8px; }
+
+  /* Center one complete reel per stop, with space for its rotated cover. */
+  .archive-home #workTrack {
+    gap: 44% !important;
+    scroll-padding-inline: 0;
+  }
+  .archive-home #workTrack .work-card {
+    flex: 0 0 58% !important;
+    width: 58% !important;
+    translate: none;
+    scroll-snap-align: center;
+  }
+  .archive-home #workTrack .work-card:first-child { margin-inline-start: 21%; }
+  .archive-home #workTrack .work-card:last-child { margin-inline-end: 21%; }
+}
+
+@media (max-width: 760px) {
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0:not([hidden]) {
+    padding-block: 8px;
+  }
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0 > * {
+    margin-block: 0 6px !important;
+    zoom: max(.8, var(--overview-fit, 1)) !important;
+  }
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0 > :is(.subtitle, .period, .summary-method),
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0 .responsibilities p {
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+  }
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0 .responsibilities {
+    padding-block: 6px;
+  }
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0 .responsibilities h2 {
+    margin-block: 0 4px;
+  }
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0 .summary-data {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 760px) and (max-height: 650px) {
+  .archive-detail > .blue-reader[data-sheet-mode="overview"]:has(> .brand-summary) {
+    margin-block: 4px;
+    padding-block: 6px;
+  }
+  .archive-detail > .blue-reader[data-sheet-mode="overview"]:has(> .brand-summary) > .blue-reader-tabs {
+    margin-block-end: 2px;
+  }
+  .archive-detail > .blue-reader[data-sheet-mode="overview"]:has(> .brand-summary) > .blue-reader-tabs button {
+    min-height: 44px;
+    padding-block: 4px;
+  }
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0 > * {
+    margin-block-end: 3px !important;
+    zoom: max(.75, var(--overview-fit, 1)) !important;
+  }
+  .archive-detail > .blue-reader > .brand-summary#archive-panel-0 .responsibilities p {
+    margin-block: 0;
+  }
+}

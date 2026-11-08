@@ -1,6 +1,10 @@
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const pending = 'wcy-archive-entry';
+  const routes = ['account', 'huihuo', 'commercial', 'rcc'];
+  // Cloudflare Pages redirects .html URLs to their extensionless forms.
+  const routePath = path => path.replace(/\.html$/, '').replace(/\/index$/, '/');
+
   const header = document.querySelector('.topline, .archive-header');
   const navigation = document.querySelector('.sidebar nav, .archive-header nav');
   if (header && navigation) {
@@ -149,13 +153,12 @@
     }
     new MutationObserver(sync).observe(reader, { childList: true });
     sync();
-    const routes = ['account.html', 'huihuo.html', 'commercial.html', 'rcc.html'];
-    const route = location.pathname.split('/').pop();
+    const route = routePath(location.pathname).split('/').pop();
     const actions = document.createElement('nav');
     actions.className = 'archive-detail-actions';
     actions.setAttribute('aria-label', '案例导航');
     for (const [label, href] of [['返回首页', 'index.html#intro'],
-      ['下一个案例', routes[(routes.indexOf(route) + 1) % routes.length]]]) {
+      ['下一个案例', routes[(routes.indexOf(route) + 1) % routes.length] + '.html']]) {
       const link = document.createElement('a');
       link.href = href;
       link.textContent = label;
@@ -320,20 +323,15 @@
     handoff = JSON.parse(sessionStorage.getItem(pending) || 'null');
     sessionStorage.removeItem(pending);
   } catch {}
-  if (gsap && !reduce.matches && handoff?.path === location.pathname) {
+  if (gsap && !reduce.matches && handoff?.path && routePath(handoff.path) === routePath(location.pathname)) {
     const folder = makeCover(handoff.color, handoff.label);
     state(handoff.phase);
-    const title = document.querySelector('.archive-case-masthead');
     const stack = document.querySelector(location.hash === '#intro' ? '.folder-stage' : '.file-tabs');
     timeline = gsap.timeline({ id: 'archive-route-transition', onComplete: resetTransition });
     if (reader) {
-      timeline.set(folder, { y: 65, rotation: 17, transformOrigin: '50% 100%' })
-        .fromTo(reader, { y: '65vh', rotation: -24, scale: .92, transformOrigin: '48% 90%' },
-          { y: 0, rotation: 0, scale: 1, duration: .52, ease: 'power3.out', clearProps: 'transform' }, 0)
-        .to(folder, { y: '62vh', rotation: 27, duration: .36, ease: 'power2.in' }, 0)
-        .to(cover, { autoAlpha: 0, duration: .2 }, .22)
-        .fromTo(title, { clipPath: 'inset(0 100% 0 0)' },
-          { clipPath: 'inset(0 0% 0 0)', duration: .44, ease: 'power2.out', clearProps: 'clipPath' }, .24);
+      timeline.fromTo(folder, { y: 65, rotation: 17, transformOrigin: '50% 100%' },
+        { y: '62vh', rotation: 27, duration: .34, ease: 'power2.in' }, 0)
+        .to(cover, { opacity: 0, duration: .22 }, .12);
     } else {
       timeline.fromTo(folder, { y: 65, rotation: 17 }, { y: 180, rotation: 0, duration: .42, ease: 'power3.out' }, 0)
         .fromTo(stack, { y: 90 }, { y: 0, duration: .46, ease: 'power3.out', clearProps: 'transform' }, .07)
@@ -350,21 +348,33 @@
     preload.href = href;
     document.head.append(preload);
   }
-  document.addEventListener('pointerover', event => {
+  function warmFromTarget(event) {
     const tab = event.target.closest('.file-tabs > button');
     const card = tab && document.getElementById(tab.getAttribute('aria-controls'));
     const link = card?.querySelector('a[href$=".html"]') ||
       event.target.closest('#caseDeck a[href], .archive-detail-actions a[href]');
     if (link && new URL(link.href).origin === location.origin) warmRoute(link.href);
-  });
+  }
+  document.addEventListener('pointerover', warmFromTarget);
+  document.addEventListener('pointerdown', warmFromTarget, { passive: true });
+  document.addEventListener('focusin', warmFromTarget);
+  const nextCase = document.querySelector('.archive-detail-actions a:last-child');
+  if (nextCase && 'IntersectionObserver' in window) {
+    const routeObserver = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      routeObserver.disconnect();
+      warmRoute(nextCase.href);
+    }, { rootMargin: '240px 0px' });
+    routeObserver.observe(nextCase);
+  }
   document.addEventListener('click', event => {
     const link = event.target.closest('a[href]');
     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
         event.shiftKey || event.altKey || !gsap || reduce.matches || link.target) return;
     const url = new URL(link.href);
     if (url.origin !== location.origin) return;
-    const destination = /\/(account|commercial|huihuo|rcc)\.html$/.test(url.pathname);
-    const returning = reader && /\/index\.html$/.test(url.pathname) && ['#cases', '#intro'].includes(url.hash);
+    const destination = routes.includes(routePath(url.pathname).split('/').pop());
+    const returning = reader && routePath(url.pathname) === new URL('.', location.href).pathname && ['#cases', '#intro'].includes(url.hash);
     if (!(destination && (reader || link.closest('#caseDeck'))) && !returning) return;
     event.preventDefault();
     if (root.dataset.archiveState !== stable) return;
@@ -380,19 +390,19 @@
       try { sessionStorage.setItem(pending, JSON.stringify({ path: url.pathname, phase, color, label })); } catch {}
       location.assign(url.href);
     }});
-    if (reader) {
+    if (phase === 'switching') {
+      timeline.fromTo(cover, { opacity: 0 }, { opacity: 1, duration: .18 }, 0)
+        .fromTo(folder, { y: '36vh', rotation: 23, transformOrigin: '50% 100%' },
+          { y: 65, rotation: 17, duration: .28, ease: 'power3.out' }, 0);
+    } else if (returning) {
       timeline.to(reader, { y: '65vh', rotation: -28, scale: .87, transformOrigin: '48% 90%',
         duration: .40, ease: 'power2.in' }, 0)
         .fromTo(cover, { autoAlpha: 0 }, { autoAlpha: 1, duration: .27 }, .19)
         .fromTo(folder, { y: '62vh', rotation: 22 }, { y: 65, rotation: 17, duration: .36, ease: 'power3.out' }, .22);
     } else {
-      const tabs = [...document.querySelectorAll('.file-tabs > button')];
-      timeline.to(tabs.filter(button => button !== tab), { y: 85, opacity: 0, duration: .30,
-        stagger: .045, ease: 'power2.in',  }, 0)
-        .fromTo(cover, { autoAlpha: 0 }, { autoAlpha: 1, duration: .23 }, .16)
+      timeline.fromTo(cover, { opacity: 0 }, { opacity: 1, duration: .20 }, 0)
         .fromTo(folder, { y: '46vh', rotation: 0, transformOrigin: '50% 100%' },
-          { y: 65, duration: .41, ease: 'power3.out' }, .08)
-        .to(folder, { rotation: 17, duration: .28, ease: 'power2.in' }, .43);
+          { y: 65, rotation: 17, duration: .32, ease: 'power3.out' }, 0);
     }
   });
   addEventListener('pageshow', event => { if (event.persisted) resetTransition(); });

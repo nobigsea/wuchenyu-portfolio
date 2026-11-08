@@ -15,13 +15,14 @@ try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:
 if(renderer) start().catch(error=>{console.warn('三维档案袋暂不可用，已保留可阅读的档案内页。',error);window.enableProfileFallback()});
 
 async function start(){
- const loader=new THREE.TextureLoader();
- const textures=Promise.allSettled(['assets/profile-left.png?v=4','assets/profile-right.png?v=4'].map(url=>loader.loadAsync(url)));
+
  const fonts=Promise.allSettled([document.fonts.load('900 48px "Portfolio Serif"'),document.fonts.load('32px "Portfolio Hand"')]);
  let fontDeadline;
  await Promise.race([fonts,new Promise(resolve=>{fontDeadline=setTimeout(resolve,1200)})]);
  clearTimeout(fontDeadline);
  const canvas=renderer.domElement;canvas.tabIndex=0;canvas.setAttribute('role','img');canvas.setAttribute('aria-label','三维档案袋。拖动或使用方向键旋转，回车抽出自我介绍，Home回到正面。');host.append(canvas);
+ document.addEventListener('pointerdown',()=>canvas.setAttribute('data-pointer-focus',''),true);
+ document.addEventListener('keydown',()=>canvas.removeAttribute('data-pointer-focus'),true);
  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.VSMShadowMap;
  const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-5,5,3,-3,.1,60);camera.position.set(0,.4,14);camera.lookAt(0,0,0);
  scene.add(new THREE.HemisphereLight(0xffffff,0xc9c4b2,1.65));const light=new THREE.DirectionalLight(0xffffff,2.4);light.position.set(-3,10,6);light.castShadow=true;light.shadow.mapSize.set(1024,1024);light.shadow.camera.left=-7;light.shadow.camera.right=7;light.shadow.camera.top=8;light.shadow.camera.bottom=-7;light.shadow.bias=-.0006;light.shadow.normalBias=.02;light.shadow.radius=5;light.shadow.blurSamples=10;scene.add(light);const fill=new THREE.DirectionalLight(0xdde8ff,.85);fill.position.set(5,1,-7);scene.add(fill);
@@ -49,32 +50,77 @@ async function start(){
  const tag=new THREE.Group();tag.position.set(1.77,.98,0);sleeve.add(tag);slab(.38,1.02,.018,material('#bd2535'),tag);plane(.37,1,texture(art.tag),tag,0,0,.017);plane(.37,1,texture(art.tag),tag,0,0,-.017,true);
  // One full landscape spread is stored sideways inside the portrait pocket.
  // It rotates together with the folder, rather than opening along a false centre hinge.
- const [spread,ctx]=paperCanvas(2000,1300,'#f6f4ed');
- const [portrait,pt]=paperCanvas(1300,2000,'#f6f4ed');pt.translate(1300,0);pt.rotate(Math.PI/2);pt.drawImage(spread,0,0);
- const pageMap=texture(portrait);slab(3,4.46,.025,material('#cbb18c'),paper,0,0,0);plane(3,4.46,pageMap,paper,0,0,-.024,true);plane(3,4.46,pageMap,paper,0,0,.024);
- paper.position.set(0,.04,0);
- let hasEditorReader=false;
- textures.then(images=>{
-  if(!hasEditorReader){
-   images.forEach((result,i)=>{
-    if(result.status==='fulfilled')ctx.drawImage(result.value.image,i*1000,0,1000,1300);
-   });
-   pt.drawImage(spread,0,0);
-   pageMap.needsUpdate=true;
-   requestRender();
-  }
-  for(const result of images)if(result.status==='fulfilled')result.value.dispose();
+ const paperStock=material('#f1f1ef');
+ slab(3,4.46,.025,paperStock,paper);
+ const preview=document.createElement('div');
+ preview.className='profile-dialog folder-paper-preview';
+ preview.setAttribute('aria-hidden','true');
+ preview.inert=true;
+ preview.hidden=true;
+ const previewContent=document.createElement('div');
+ previewContent.id='profilePaperSurface';
+ preview.append(previewContent);
+ host.append(preview);
+ let previewDirty=true;
+ const readerContent=document.querySelector('#profileContent');
+ new MutationObserver(()=>{previewDirty=true;requestRender()}).observe(readerContent,{
+  subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-hidden','class']
  });
- queueMicrotask(()=>window.WCYLayout?.subscribe(async(pages,draw)=>{for(const [role,mesh] of [['folder-front',frontPrint],['folder-back',backPrint]]){const page=pages.find(p=>p.role===role);if(page){const map=texture(await draw(page));mesh.material.map?.dispose();mesh.material.map=map;mesh.material.needsUpdate=true}}const reader=pages.find(p=>p.role==='reader-0');if(reader){const canvas=await draw(reader);hasEditorReader=true;pt.save();pt.setTransform(1,0,0,1,0,0);pt.fillStyle='#cbb18c';pt.fillRect(0,0,1300,2000);pt.translate(1300,0);pt.rotate(Math.PI/2);const stock=reader.elements.find(e=>e.asset==='archive-paper-v2');if(stock)pt.drawImage(canvas,stock.x,stock.y,stock.w,stock.h,0,0,2000,1300);else pt.drawImage(canvas,0,0,2000,1300);pt.restore();pageMap.needsUpdate=true}requestRender()}));
+ const paperCorner=new THREE.Vector3();
+ function point(object,x,y,z=0){
+  return paperCorner.set(x,y,z).applyMatrix4(object.matrixWorld).project(camera).clone();
+ }
+ function paintPaper(){
+  if(progress<.17||dialog.open||!readerContent.firstElementChild){
+   preview.hidden=true;
+   return;
+  }
+  if(previewDirty){
+   previewContent.replaceChildren(...[...readerContent.children].map(node=>node.cloneNode(true)));
+   previewDirty=false;
+  }
+  preview.hidden=false;
+  const w=previewContent.offsetWidth,h=previewContent.offsetHeight;
+  if(!w||!h)return;
+  model.updateWorldMatrix(true,true);
+  const face=model.rotation.y>Math.PI/2?-1:1;
+  const scale=Math.min(4.46/w,3/h);
+  const halfWidth=w*scale/2,halfHeight=h*scale/2;
+  const top=innerWidth<=760?lerp(2.23,halfWidth,smooth(.70,1,progress)):halfWidth;
+  const p0=point(paper,face*halfHeight,top,face*.037);
+  const p1=point(paper,face*halfHeight,top-2*halfWidth,face*.037);
+  const p2=point(paper,-face*halfHeight,top,face*.037);
+  const size=canvas.getBoundingClientRect();
+  const xy=p=>[(p.x+1)*size.width/2,(1-p.y)*size.height/2];
+  const [x,y]=xy(p0),[rx,ry]=xy(p1),[bx,by]=xy(p2);
+  previewContent.style.transform=`matrix(${(rx-x)/w},${(ry-y)/w},${(bx-x)/h},${(by-y)/h},${x},${y})`;
+  if(progress<.70){
+   const [lx,ly]=xy(point(sleeve,-1.63,2.16,0));
+   const [hx,hy]=xy(point(sleeve,1.63,2.16,0));
+   const slope=(hy-ly)/(hx-lx||1);
+   preview.style.clipPath=`polygon(0 0,100% 0,100% ${ly+(size.width-lx)*slope}px,0 ${ly-lx*slope}px)`;
+  }else preview.style.clipPath='none';
+ }
+ queueMicrotask(()=>window.WCYLayout?.subscribe(async(pages,draw)=>{
+  for(const [role,mesh] of [['folder-front',frontPrint],['folder-back',backPrint]]){
+   const page=pages.find(p=>p.role===role);
+   if(!page)continue;
+   const map=texture(await draw(page));
+   mesh.material.map?.dispose();
+   mesh.material.map=map;
+   mesh.material.needsUpdate=true;
+  }
+  requestRender();
+ }));
  const mats=[];sleeve.traverse(o=>{if(o.material&&!mats.includes(o.material))mats.push(o.material)});
  window.ensureProfileContent();
- let progress=0,target=0,animating=false,showReader=false,yaw=0,pitch=.025,roll=0,fromYaw=yaw,fromPitch=pitch,fromRoll=roll,startTime=0,startProgress=0,drag=null,visible=true,frame=0,hoverScale=1,hoverTarget=1,lastFrameTime=0;
+ let progress=0,target=0,animating=false,showReader=false,yaw=.45,pitch=.16,roll=-.035,fromYaw=yaw,fromPitch=pitch,fromRoll=roll,startTime=0,startProgress=0,drag=null,visible=true,frame=0,hoverScale=1,hoverTarget=1,lastFrameTime=0;
  const motion={progress:0,hover:1,paperHover:1};let folderTimeline,readerTween;let paperHoverTarget=1;
  const paperHoverTo=gsap?.quickTo(motion,'paperHover',{duration:.26,ease:'power2.out',onUpdate:requestRender});
  function setPaperHover(value){if(paperHoverTarget===value)return;paperHoverTarget=value;if(gsap)paperHoverTo(value);else{motion.paperHover=value;requestRender()}}
  const hoverTo=gsap?.quickTo(motion,'hover',{duration:.28,ease:'power2.out',onUpdate:()=>{hoverScale=motion.hover;requestRender()}});
  function setHover(value){if(hoverTarget===value)return;hoverTarget=value;if(gsap)hoverTo(value)}
- function restoreClosed(){setPaperHover(1);motion.paperHover=1;progress=target=motion.progress=0;animating=false;yaw=0;pitch=.025;roll=0;hoverScale=motion.hover=1;pull.disabled=false;reset.disabled=false;pull.textContent='打开档案袋 ↗';pull.setAttribute('aria-expanded','false');document.querySelector('#folderHint').textContent='拖动旋转 360° · 点击打开档案袋';pose();renderer.render(scene,camera);requestRender()}
+ function restoreClosed(){setPaperHover(1);motion.paperHover=1;progress=target=motion.progress=0;animating=false;yaw=.45;pitch=.16;roll=-.035;hoverScale=motion.hover=1;pull.disabled=false;reset.disabled=false;pull.textContent='打开档案袋 ↗';pull.setAttribute('aria-expanded','false');document.querySelector('#folderHint').textContent='拖动旋转 360° · 点击打开档案袋';pose();renderer.render(scene,camera);requestRender()}
  function finishFolder(){if(!animating)return;progress=motion.progress=target;animating=false;pull.disabled=false;reset.disabled=false;if(target<1){yaw=Math.PI;pitch=0;roll=0;pull.textContent='抽出并展开内页 ↗';pull.setAttribute('aria-expanded','true');document.querySelector('#folderHint').textContent='点击露出的内页，自动展开并放大阅读';requestRender();return}yaw=Math.PI;pitch=0;roll=-Math.PI/2;pose();renderer.render(scene,camera);if(showReader)openReader();else requestRender()}
 
  function syncVisibility(){setHover(1);setPaperHover(1);if(gsap){if(document.hidden||!visible){folderTimeline?.pause();hoverTo.tween.pause();paperHoverTo.tween.pause()}else{if(animating)folderTimeline?.resume();hoverTo(1);paperHoverTo(1)}}requestRender()}
@@ -86,11 +132,11 @@ async function start(){
 
  function resize(){const r=host.getBoundingClientRect();if(!r.width||!r.height)return;renderer.setSize(r.width,r.height,false);updateCamera()}
  function updateCamera(){const r=host.getBoundingClientRect(),aspect=Math.max(.1,r.width/r.height);const opened=smooth(.70,1,progress);const portraitHalf=lerp(Math.max(2.7,1.9/aspect),Math.max(3.15,1.9/aspect),smooth(.15,.42,progress));const extractedHalf=lerp(portraitHalf,Math.max(3.85,1.9/aspect),smooth(.44,.70,progress));const half=lerp(extractedHalf,Math.max(2.3,3.05/aspect),opened);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.updateProjectionMatrix()}
- function pose(){if(dialog.open){progress=target=motion.progress=0;animating=false;hoverScale=motion.hover=1}model.scale.setScalar(hoverScale);host.dataset.hoverScale=hoverScale.toFixed(4);
+ function pose(){if(dialog.open){progress=target=motion.progress=0;animating=false;hoverScale=motion.hover=1}const closed = 1 - smooth(0,.42,progress);model.scale.set(hoverScale*(1+.12*closed),hoverScale*(1-.07*closed),hoverScale*(1+.24*closed));host.dataset.hoverScale=hoverScale.toFixed(4);
  const flip=smooth(0,.23,progress),expose=smooth(.16,.42,progress),extract=smooth(.44,.70,progress),landscape=smooth(.70,1,progress);
  if(animating){const align=smooth(0,.14,Math.abs(progress-startProgress));model.rotation.set(lerp(fromPitch,0,align),lerp(fromYaw,Math.PI*flip,align),lerp(fromRoll,-Math.PI/2*landscape,align))}else model.rotation.set(pitch,yaw,roll);
  paper.scale.setScalar(motion.paperHover);host.dataset.paperHover=motion.paperHover.toFixed(4);paper.position.set(0,.04+expose*.92+extract*.70+(motion.paperHover-1)*1.1,-extract*.16);flapPivot.rotation.x=-smooth(.12,.30,progress)*1.5;flapPivot.visible=progress<.28;
- sleeve.visible=true;model.position.set(landscape*.82,-expose*.27+landscape*.27,0);floor.material.opacity=.065*(1-landscape);softShadow.material.opacity=1-landscape;updateCamera();host.dataset.rotation=String(Math.round(model.rotation.y*180/Math.PI));host.dataset.phase=animating?'opening':progress>=.99?'spread':progress?'exposed':'closed';host.dataset.progress=progress.toFixed(3);
+ sleeve.visible=true;model.position.set(landscape*.82,-expose*.27+landscape*.27,0);floor.material.opacity=.065*(1-landscape);softShadow.material.opacity=1-landscape;updateCamera();host.dataset.rotation=String(Math.round(model.rotation.y*180/Math.PI));host.dataset.phase=animating?'opening':progress>=.99?'spread':progress?'exposed':'closed';host.dataset.progress=progress.toFixed(3);paintPaper();
  }
 
  function render(timestamp){frame=0;if(document.hidden||!visible)return;if(!gsap){const dt=Math.min(64,lastFrameTime?timestamp-lastFrameTime:16);lastFrameTime=timestamp;hoverScale=lerp(hoverScale,hoverTarget,1-Math.exp(-dt/105));if(Math.abs(hoverScale-hoverTarget)<.0001)hoverScale=hoverTarget;if(animating){const elapsed=(performance.now()-startTime)/(reduced.matches?1:target<1?1050:1150),t=clamp(elapsed),ease=t*t*(3-2*t);progress=lerp(startProgress,target,ease);if(t>=1)finishFolder()}}pose();renderer.render(scene,camera);if(!host.dataset.rendered){host.dataset.rendered='true';document.querySelector('#openProfileFallback').hidden=true;document.dispatchEvent(new Event('portfolio:folder-ready'))}if(!gsap&&(animating||Math.abs(hoverScale-hoverTarget)>.0001))requestRender()}

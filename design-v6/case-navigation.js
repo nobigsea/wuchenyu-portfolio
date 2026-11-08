@@ -1,14 +1,112 @@
-/* Case navigation is independent from the media-library bootstrap. */
-(()=>{const stage=document.querySelector('#cases'),pin=stage?.querySelector('.case-pin'),deck=document.querySelector('#caseDeck'),tabs=document.querySelector('.file-tabs');if(!stage||!pin||!deck||!tabs)return;const reduce=matchMedia('(prefers-reduced-motion: reduce)');const mobile=matchMedia('(max-width: 650px)');let chosen=0,scheduled=false,displayProgress=null;
-function cards(){return [...deck.querySelectorAll('.file-card')]}
-function metrics(){const top=parseFloat(getComputedStyle(pin).top)||0,heading=stage.querySelector('.section-title')?.offsetHeight||0;return{start:scrollY+stage.getBoundingClientRect().top+heading-top,range:Math.max(1,stage.offsetHeight-pin.offsetHeight-heading)}}
-function go(index){const m=metrics();chosen=Math.max(0,Math.min(cards().length-1,index));if(reduce.matches){if(mobile.matches)update();cards()[chosen]?.scrollIntoView({block:'start'});return}if(mobile.matches){update();return}window.scrollTo({top:m.start+m.range*chosen/Math.max(1,cards().length-1),behavior:'smooth'});update()}
-window.WCYCaseNavigation={go};function update(){const list=cards();if(!list.length)return;if(mobile.matches){chosen=Math.min(list.length-1,chosen);paint(list,chosen,!reduce.matches);return}const m=metrics(),progress=Math.max(0,Math.min(list.length-1,(scrollY-m.start)/m.range*(list.length-1)));if(displayProgress===null||reduce.matches)displayProgress=progress;else displayProgress+= (progress-displayProgress)*.18;const painting=displayProgress;chosen=Math.min(list.length-1,Math.round(progress));paint(list,painting,false);if(Math.abs(progress-displayProgress)>.001)requestAnimationFrame(update)}
-function paint(list,painting,mobileLayout){list.forEach((card,i)=>{const away=Math.max(0,Math.min(1,painting-i));card.style.zIndex=String(list.length-i);card.style.transition='none';card.style.transform=mobileLayout||reduce.matches?'none':`translate3d(0,${-away*105}%,0)`;card.style.visibility=mobileLayout||reduce.matches||away<1?'visible':'hidden';card.style.pointerEvents=mobileLayout||reduce.matches||i===chosen?'auto':'none';card.setAttribute('aria-hidden',String((mobileLayout||!reduce.matches)&&i!==chosen))});[...tabs.children].forEach((b,i)=>{b.disabled=false;b.setAttribute('aria-selected',String(i===chosen));b.tabIndex=0;b.style.pointerEvents='auto';b.onclick=()=>go(i)});const prev=document.querySelector('#casePrev'),next=document.querySelector('#caseNext');prev.disabled=chosen===0;next.disabled=chosen===list.length-1;prev.onclick=()=>go(chosen-1);next.onclick=()=>go(chosen+1);document.querySelector('#caseCount').textContent=`${chosen+1} / ${list.length}`;}
-addEventListener('scroll',()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;update()})},{passive:true});addEventListener('resize',update);new MutationObserver(update).observe(deck,{childList:true});update();
-const requestedCase=new URLSearchParams(location.search).get('case');
-if(requestedCase&&/^[1-4]$/.test(requestedCase)){
- const selectRequested=()=>requestAnimationFrame(()=>{go(Number(requestedCase)-1);if(mobile.matches&&!reduce.matches)stage.scrollIntoView({block:'start'});});
- if(document.readyState==='complete')selectRequested();else addEventListener('load',selectRequested,{once:true});
-}
+/* The existing case cards are pulled out of a compact folder stack. */
+(() => {
+  const stage = document.querySelector('#cases');
+  const tabs = stage.querySelector('.file-tabs');
+  const wrap = stage.querySelector('.deck-wrap');
+  const deck = document.querySelector('#caseDeck');
+  const cards = [...deck.querySelectorAll('.file-card')];
+  const buttons = [...tabs.querySelectorAll('button')];
+  const previous = document.querySelector('#casePrev');
+  const next = document.querySelector('#caseNext');
+  const counter = document.querySelector('#caseCount');
+  const hover = matchMedia('(hover: hover) and (pointer: fine)');
+  let selected = -1;
+  let pinned = false;
+
+  function show(index) {
+    if (selected === index && wrap.hidden === (index < 0)) return;
+    selected = index;
+    buttons.forEach((button, i) => {
+      button.setAttribute('aria-selected', String(i === index));
+      button.tabIndex = 0;
+      cards[i].setAttribute('aria-hidden', String(i !== index));
+      cards[i].inert = i !== index;
+    });
+    wrap.hidden = index < 0;
+    if (index >= 0) {
+      const overlay = hover.matches && innerWidth >= 761;
+      if (overlay) tabs.before(wrap);
+      else buttons[index].after(wrap);
+      wrap.classList.toggle('case-overlay', overlay);
+      if (overlay) {
+        const available = tabs.getBoundingClientRect().top - Math.max(0, stage.getBoundingClientRect().top);
+        wrap.style.setProperty('--case-preview-space', Math.max(180, available - 14) + 'px');
+      }
+      wrap.scrollTop = 0;
+      document.dispatchEvent(new Event('portfolio:case-shown'));
+
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches && window.gsap) {
+        window.gsap.fromTo(cards[index], { y: overlay ? 140 : 32 }, {
+          y: 0, duration: .48, ease: 'power3.out', overwrite: true,
+          clearProps: 'transform'
+        });
+      }
+      wrap.style.setProperty('--open-folder', getComputedStyle(buttons[index]).getPropertyValue('--folder-color'));
+    }
+    previous.disabled = index <= 0;
+    next.disabled = index === cards.length - 1;
+    counter.textContent = `${Math.max(1, index + 1)} / ${String(cards.length).padStart(2, '0')}`;
+  }
+
+  function go(index) {
+    pinned = true;
+    show(Math.max(0, Math.min(cards.length - 1, index)));
+  }
+
+  buttons.forEach((button, index) => {
+    button.addEventListener('pointerenter', () => {
+      if (hover.matches && !pinned) show(index);
+    });
+    button.onkeydown = event => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const step = ['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : -1;
+      const target = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 :
+        (index + step + buttons.length) % buttons.length;
+      go(target);
+      buttons[target].focus({ preventScroll: true });
+    };
+    button.onclick = () => {
+      if (hover.matches && innerWidth >= 761) {
+        go(index);
+        const link = [...cards[index].querySelectorAll('a[href]')].find(anchor =>
+          /(?:account|commercial|huihuo|rcc)\.html$/.test(anchor.getAttribute('href')) &&
+          anchor.getClientRects().length);
+        if (link) link.click();
+        return;
+      }
+      if (selected === index && pinned) {
+        pinned = false;
+        show(-1);
+      } else go(index);
+    };
+  });
+  stage.addEventListener('pointerleave', () => {
+    if (hover.matches && !pinned && !wrap.contains(document.activeElement)) show(-1);
+  });
+  stage.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || selected < 0) return;
+    buttons[selected].focus();
+    pinned = false;
+    show(-1);
+  });
+  function adaptOpenCard() {
+    if (selected < 0) return;
+    const index = selected;
+    selected = -1;
+    show(index);
+  }
+  hover.addEventListener('change', adaptOpenCard);
+  matchMedia('(min-width: 761px)').addEventListener('change', adaptOpenCard);
+  previous.onclick = () => go(selected - 1);
+  next.onclick = () => go(selected + 1);
+  window.WCYCaseNavigation = { go };
+  stage.classList.add('folder-stack');
+  show(-1);
+
+  const requested = new URLSearchParams(location.search).get('case');
+  if (/^[1-4]$/.test(requested || '')) {
+    go(Number(requested) - 1);
+    requestAnimationFrame(() => stage.scrollIntoView());
+  }
 })();

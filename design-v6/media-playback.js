@@ -19,7 +19,7 @@ const portfolioMobileVideos = new Set([
 ]);
 
 // Start the request and playback inside the tap so mobile browsers retain user activation.
-window.mountPortfolioVideo = (video, src, poster, title) => {
+window.mountPortfolioVideo = (video, src, poster, title, openPreview) => {
   video.preload = 'none';
   video.playsInline = true;
   video.controls = false;
@@ -41,6 +41,10 @@ window.mountPortfolioVideo = (video, src, poster, title) => {
   status.setAttribute('role', 'status');
   button.append(cover, icon, status);
   video.after(button);
+  if (openPreview) {
+    button.addEventListener('click', openPreview);
+    return;
+  }
 
   let startupDeadline;
   let useOriginal = false;

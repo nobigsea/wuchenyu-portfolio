@@ -1648,7 +1648,7 @@ html:has(.archive-detail .blue-reader[data-sheet-switching]) {
 }
 
 @media (max-width:760px) {
-  html:has(body.archive-home):not(:has(dialog[open])) {
+  html:has(body.archive-home):not(:has(dialog[open])):not([data-swipe-paging]) {
     scroll-snap-type: y proximity;
     scroll-padding-top: 0;
   }

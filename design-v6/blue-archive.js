@@ -260,6 +260,25 @@
   const stages = [...document.querySelectorAll('main > :is(#intro,#cases,#archive,#contact)')];
   let sectionMotion;
   let lastWheel = 0;
+  function scrollToSection(target, mobile = false) {
+    const position = { y: scrollY };
+    const end = Math.min(target, document.documentElement.scrollHeight - innerHeight);
+    const root = document.documentElement;
+    const releaseSnap = () => root.removeAttribute('data-swipe-paging');
+    if (mobile) root.setAttribute('data-swipe-paging', '');
+    if (reduce.matches) {
+      scrollTo({ top: end, behavior: 'instant' });
+      releaseSnap();
+      return;
+    }
+    sectionMotion = gsap.to(position, {
+      id: 'archive-section-scroll', y: end, duration: mobile ? .38 : .72,
+      ease: mobile ? 'power2.out' : 'power3.inOut',
+      onUpdate: () => scrollTo({ top: position.y, behavior: 'instant' }),
+      onComplete: releaseSnap, onInterrupt: releaseSnap
+    });
+  }
+
   if (stages.length && gsap) {
     addEventListener('wheel', event => {
       if (reduce.matches || innerWidth < 761 || event.ctrlKey || event.shiftKey ||
@@ -279,13 +298,60 @@
       const target = offsets[current + direction];
       if (target === undefined) return;
       event.preventDefault();
-      const position = { y: scrollY };
-      const end = Math.min(target, document.documentElement.scrollHeight - innerHeight);
-      sectionMotion = gsap.to(position, {
-        id: 'archive-section-scroll', y: end, duration: .72, ease: 'power3.inOut',
-        onUpdate: () => scrollTo({ top: position.y, behavior: 'instant' })
-      });
+      scrollToSection(target);
     }, { passive: false });
+  }
+
+  if (stages.length && gsap) {
+    const mobile = matchMedia('(max-width: 760px) and (pointer: coarse)');
+    let gesture;
+    const clearGesture = () => { gesture = null; };
+    addEventListener('touchstart', event => {
+      clearGesture();
+      if (!mobile.matches || event.touches.length !== 1 ||
+          document.querySelector('dialog[open], .archive-transition') ||
+          event.target.closest?.('.deck-wrap, .reference-menu')) return;
+      const [touch] = event.touches;
+      gesture = { x: touch.clientX, y: touch.clientY, claimed: false };
+    }, { passive: true });
+    addEventListener('touchmove', event => {
+      if (!gesture || event.touches.length !== 1 || !event.cancelable) return;
+      if (gesture.claimed) {
+        event.preventDefault();
+        return;
+      }
+      const [touch] = event.touches;
+      const dx = touch.clientX - gesture.x;
+      const dy = gesture.y - touch.clientY;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        clearGesture();
+        return;
+      }
+      if (sectionMotion?.isActive()) {
+        gesture.claimed = true;
+        event.preventDefault();
+        return;
+      }
+      const offsets = stages.map(stage => stage.getBoundingClientRect().top + scrollY);
+      const atBottom = scrollY >= document.documentElement.scrollHeight - innerHeight - 2;
+      const current = atBottom ? stages.length - 1 : offsets.findLastIndex(y => y <= scrollY + 24);
+      const stage = stages[current];
+      const target = offsets[current + Math.sign(dy)];
+      // A long open card needs normal reading scroll within its section.
+      if (!stage || target === undefined || stage.querySelector('.deck-wrap:not([hidden])') ||
+          (current < stages.length - 1 && stage.offsetHeight > innerHeight + 24) ||
+          (current < stages.length - 1 && Math.abs(scrollY - offsets[current]) > 24)) {
+        clearGesture();
+        return;
+      }
+      gesture.claimed = true;
+      event.preventDefault();
+      scrollToSection(target, true);
+    }, { passive: false });
+    addEventListener('touchend', clearGesture, { passive: true });
+    addEventListener('touchcancel', clearGesture, { passive: true });
+    addEventListener('pagehide', () => sectionMotion?.kill());
   }
 
   const root = document.documentElement;

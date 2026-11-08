@@ -305,14 +305,41 @@ function mountMobileCase(card,elements){
   const captions=document.createElement('div');
   captions.className='case-flow-captions';
   captions.append(...text.filter(isCaption).sort((a,b)=>a.x-b.x).map(mobileCaseText));
-  gallery.append(captions);
+  if(captions.childElementCount)gallery.append(captions);
   evidence.append(stats,gallery);
   flow.append(evidence);
  }
  appendCopy(flow,links);
  card.append(flow);
 }
-function mountCases(){for(const p of pages().filter(p=>p.role.startsWith('case-'))){const i=Number(p.role.slice(5)),card=document.querySelector('#case-panel-'+i);if(!card)continue;card.querySelector('.linked-case-board')?.remove();card.classList.add('has-linked-case');card.style.setProperty('--card',p.background);const board=document.createElement('div');board.className='linked-case-board';board.dataset.width=p.width;board.dataset.height=p.height;Object.assign(board.style,{position:'absolute',left:'50%',top:'50%',width:p.width+'px',height:p.height+'px',transformOrigin:'center',background:p.background});for(const e of p.elements)if(!e.hidden)board.append(artworkNode(e));card.append(board);mountMobileCase(card,p.elements);const b=document.querySelector('#case-tab-'+i);if(b){b.style.setProperty('--tab',p.background);const heading=p.elements.find(e=>e.caseField==='title');if(heading)b.textContent=heading.text.trim()}}fitCases()}
+function mountCases(){
+ for(const page of pages().filter(p=>p.role.startsWith('case-'))){
+  const index=Number(page.role.slice(5));
+  const card=document.querySelector('#case-panel-'+index);
+  if(!card)continue;
+  const elements=page.elements.filter(element=>
+   !element.hidden && !(element.type==='text' && /^0[12]\s*\//.test(element.text?.trim()))
+  );
+  card.querySelector('.linked-case-board')?.remove();
+  card.classList.add('has-linked-case');
+  card.style.setProperty('--card',page.background);
+  const board=document.createElement('div');
+  board.className='linked-case-board';
+  board.dataset.width=page.width;
+  board.dataset.height=page.height;
+  Object.assign(board.style,{position:'absolute',left:'50%',top:'50%',width:page.width+'px',height:page.height+'px',transformOrigin:'center',background:page.background});
+  for(const element of elements)board.append(artworkNode(element));
+  card.append(board);
+  mountMobileCase(card,elements);
+  const button=document.querySelector('#case-tab-'+index);
+  if(button){
+   button.style.setProperty('--tab',page.background);
+   const heading=elements.find(element=>element.caseField==='title');
+   if(heading)button.textContent=heading.text.trim();
+  }
+ }
+ fitCases();
+}
 addEventListener('resize',fitCases);const deck=document.querySelector('#caseDeck');if(deck)new ResizeObserver(fitCases).observe(deck);
 
 function mountContact(){const p=pages().find(p=>p.role==='contact'),root=document.querySelector('#contact');if(!p||!root)return;root.replaceChildren();root.style.background=p.background;const board=document.createElement('div');board.className='contact-flow';for(const e of p.elements){if(e.hidden||e.type!=='text')continue;const n=document.createElement(e.contactAction==='email'?'a':e.contactAction==='wechat'?'button':'p');n.textContent=e.text;

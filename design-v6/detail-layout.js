@@ -130,6 +130,7 @@ function mountVideoRails(p,config,rb,layers){
  for(const caption of captions){
   const label=document.createElement('p');
   label.textContent=caption.text.trim();
+  label.style.whiteSpace='pre-line';
   card.append(label);
   layers.get(caption).remove();
   layers.delete(caption);
